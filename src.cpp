@@ -2,32 +2,150 @@
 #include<boost/tokenizer.hpp>
 #include<string>
 #include<vector>
-#include<list>
-#include<map>
 #include<fstream>
 #include<bitset>
 #include"dirent.h"
 using namespace std;
 using namespace boost;
 
+class dictionary{
+private:
+	struct vocabulary{
+		string term;
+		long location; //start location in the posting list
+		int length; //length of the block in the posting list
+	};
+
+	vector<vocabulary> dict;
+
+public:
+	void update(vector<string> voc){
+		for(vector<string>::iterator it = voc.begin(); it != voc.end(); ++it){
+			if(find(*it)) continue;
+			else add(*it);
+		}
+	}
+
+	vocabulary *find(string term){ //return a vocabulary struct
+		for(vector<vocabulary>::iterator it = dict.begin(); it != dict.end(); ++it){
+			if(it->term == term){
+				vocabulary* voc = new vocabulary;
+				voc->term = term;
+				voc->location = it->location;
+				voc->length = it->length;
+				return voc;
+			}
+		}
+		return nullptr;
+	}
+
+	void add(string term){
+		dict.push_back({term, 0, 0});
+	}
+
+	void display(){
+		for(vector<vocabulary>::iterator it = dict.begin(); it != dict.end(); ++it){
+			cout << it->term << ' ' << it->location << ' ' << it->length << endl;
+		}
+	}
+
+	void update(string term, long loc, int len){
+		vocabulary* dicvoc = find(term);
+		dicvoc->location = loc;
+		dicvoc->length = len;
+	}
+};
+
+class index{
+private:
+	struct postingList{
+		string term;
+		vector<unsigned int> postings;
+	};
+
+	vector<postingList> ind;
+
+public:
+	void update(vector<string> voc, unsigned int docID){
+		for (vector<string>::iterator it = voc.begin(); it != voc.end(); ++it) {
+			postingList* findterm = find(*it);
+			if (findterm) {
+				(findterm->postings).push_back(docID);
+				// cout << findterm->term << endl;
+				// for(vector<unsigned int>::iterator it2 = (findterm->postings).begin(); it2 != (findterm->postings).end(); ++it2){
+				// 	cout << *it2 << ' ';
+				// }
+				// cout << endl;
+			}
+			else {
+				postingList *posting = new postingList;
+				posting->term = *it;
+				(posting->postings).push_back(docID);
+				ind.push_back(*posting);
+			}
+		}
+	}
+
+	postingList *find(string term){
+		for(vector<postingList>::iterator it = ind.begin(); it != ind.end(); ++ it){
+			if(it->term == term){
+				postingList *pos = new postingList;
+				pos->term = term;
+				pos->postings = &it->postings;
+				return pos;
+			}
+		}
+		return nullptr;
+	}
+
+	void encode(){}
+	void writeToDisk(){}
+	void decode(){}
+	void merge(){}
+	void query(){}
+	void display(){
+		for(vector<postingList>::iterator it = ind.begin(); it != ind.end(); ++ it){
+			cout << it->term << ' ';
+			for(vector<unsigned int>::iterator intit = (it->postings).begin(); intit != (it->postings).end(); ++intit){
+				cout<< *intit << " ";
+			}
+			cout << endl;
+		}
+	}
+};
+
+class pageTable{
+public:
+
+private:
+	struct page{
+		int docID;
+		string url;
+		int length;
+	};
+
+	vector<page> table;
+};
+
 string readFile(string dir) {
 	ifstream myFile;
-	myFile.open(dir);
+	myFile.open(dir.c_str());
 	string inputStream;
 	getline(myFile, inputStream);
 	return inputStream;
 }
 
-list<string> tokenize(string text) {
+vector<string> tokenize(string text) {
 	string s = text;
 	tokenizer<> tok(s);
-	list<string> vocabulary;
+	vector<string> vocabulary;
 	for (tokenizer<>::iterator beg = tok.begin(); beg != tok.end(); ++beg) {
 		vocabulary.push_back(*beg);
 	}
 	return vocabulary;
 }
 
+/*
 string VBEncode(vector<unsigned int> uncomp) {
 	string buffer;
 	string mybits;
@@ -45,12 +163,12 @@ string VBEncode(vector<unsigned int> uncomp) {
 	return buffer;
 }
 
-void encode(map < string, vector<unsigned int>> postingList, map<string, tuple<long, int>> &dic, ofstream &myfile) {
+void encode(std::map< string, vector<unsigned int> > postingList, std::map<string, tuple<long, int> > &dic, ofstream &myfile) {
 	long loc;
-	for (map<string, vector<unsigned int>>::iterator it = postingList.begin(); it != postingList.end(); ++it) {
+	for (map<string, vector<unsigned int> >::iterator it = postingList.begin(); it != postingList.end(); ++it) {
 		char buffer[64] = { 0 };//64 is write-to-file-buffer size(block size)
 		loc = myfile.tellp();
-		map<string, tuple<long, int>>::iterator dicvoc;
+		map<string, tuple<long, int> >::iterator dicvoc;
 		dicvoc = dic.find(it->first);
 		get<0>(dicvoc->second) = loc; //update dictionary
 		vector<unsigned int> posting = it->second;
@@ -93,21 +211,7 @@ vector<int> decode(char* block, int size) {
 	return postings;
 }
 
-void merge() {
-
-}
-
-void buildDic(list<string> voc, map<string, tuple<long, int>> &dic) {
-	map<string, tuple<long,int>>::iterator findit;//map of {term} to {pointer in file(location), length of the block}
-	for (list<string>::iterator it = voc.begin(); it != voc.end(); ++it) {
-		findit = dic.find(*it);
-		if (findit == dic.end()) {
-			dic.insert(pair<string, tuple<long, int>>(*it, { 0,0 }));
-		}
-	}
-}
-
-void buildPageTable(string fileName, int docID, map<int, tuple<string, int>> &pageTable) {
+void buildPageTable(string fileName, int docID, vector<page> &pageTable) {
 	FILE * pFile;
 	long size;
 	const char* fileDir = fileName.c_str();
@@ -119,27 +223,16 @@ void buildPageTable(string fileName, int docID, map<int, tuple<string, int>> &pa
 		size = ftell(pFile);
 		fclose(pFile);
 	}
-	pageTable.insert(pair<int, tuple<string, int>>(docID, { fileName, size }));
+	pageTable.insert(pair<int, tuple<string, int> >(docID, { fileName, size }));
 }
 
-void buildPList(list<string> voc, unsigned int docId, map < string, vector<unsigned int>> &postingList) {
-	map < string, vector<unsigned int>>::iterator findit;
-	for (list<string>::iterator it = voc.begin(); it != voc.end(); ++it) {
-		findit = postingList.find(*it);
-		if (findit == postingList.end()) {
-			vector<unsigned int> posting;
-			posting.push_back(docId);
-			postingList.insert(pair<string, vector<unsigned int>>(*it, posting));
-		}
-		else {
-			(findit->second).push_back(docId);
-		}
-	}
+void buildPList(list<string> voc, unsigned int docId, vector<postingList> &index) {
+
 }
 
-void writetoDisk(map < string, vector<unsigned int>> postingList, map<string, tuple<long,int>> &dic) {
+void writetoDisk(map < string, vector<unsigned int>> postingList, map<string, tuple<long,int> > &dic) {
 	ofstream pList(".\\postinglists\\001", ofstream::binary);
-	if (pList) encode(postingList, dic, pList); 
+	if (pList) encode(postingList, dic, pList);
 	else perror("Error opening file");
 	pList.close();
 }
@@ -149,9 +242,9 @@ vector<int> merge(vector<string> results) {
 	return allP;
 }
 
-vector<int> query(string query, map<string, tuple<long, int>> &dic) {
-	map<string, tuple<long, int>>::iterator dicvoc;
-	list<string> stream; 
+vector<int> query(string query, map<string, tuple<long, int> > &dic) {
+	map<string, tuple<long, int> >::iterator dicvoc;
+	list<string> stream;
 	vector<int> allPosting;
 	stream = tokenize(query);
 	for (list<string>::iterator it = stream.begin(); it != stream.end(); ++it) {
@@ -171,64 +264,47 @@ vector<int> query(string query, map<string, tuple<long, int>> &dic) {
 	}
 	return allPosting;
 }
-
-void displayVoc(list<string> voc) {
-	for (list<string>::iterator it = voc.begin(); it != voc.end(); ++it) {
-		cout << *it << endl;
-	}
-}
-
-void displayDic(map<string, tuple<long,int>>dic) {
-	cout << "Dictionary: " << endl;
-	for (map<string, tuple<long, int>>::iterator it = dic.begin(); it != dic.end(); ++it) {
-		cout << it->first << ' ' << get<0>(it->second) << ' ' <<  get<1>(it->second) << endl;
-	}
-}
-
-void displayPList(map<string, vector<unsigned int>> pList) {
-	cout << "Posting Lists: " << endl;
-	for (map<string, vector<unsigned int>>::iterator it = pList.begin(); it != pList.end(); ++it) {
-		cout << it->first << ' ';
-		for (vector<unsigned int>::iterator vit = (it->second).begin(); vit != (it->second).end(); ++vit) {
-			cout << *vit << ' ';
-		}
-		cout << endl;
-	}
-}
+*/
 
 int main() {
-	int docId = -2;
-	map<string, tuple<long, int>> dic;
-	map<string, vector<unsigned int>> postingList;
-	map <int, tuple<string, int>> pageTable;
+	unsigned int docId = 0;
+	dictionary dictionary;
+	index index;
+	pageTable pageTable;
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir(".\\files")) != NULL) {
+	if ((dir = opendir("./files")) != NULL) {
 		/* print all the files and directories within directory */
 		while ((ent = readdir(dir)) != NULL) {
-			docId ++;
 			string dir = ent->d_name;
-			//printf("%s\n", dir);
 			string wordStream;
 			if (dir != "." && dir != "..") {
-				string fileDir = "D:\\mystuff\\InvertedIndex\\files\\" + dir;
+				docId ++;
+				cout << dir << endl;
+				string fileDir = "./files/" + dir;
 				wordStream = readFile(fileDir);
-				list<string> voc = tokenize(wordStream);
-				buildDic(voc, dic);
-				buildPList(voc, docId, postingList);
-				buildPageTable(fileDir, docId, pageTable);
+				vector<string> voc = tokenize(wordStream);
+				dictionary.update(voc);
+				index.update(voc, docId);
+				//buildPList(voc, docId, index);
+				//buildPageTable(fileDir, docId, pageTable);
 			}
 		}
+		//dictionary.display();
+		index.display();
+		/*
 		closedir(dir);
 		displayPList(postingList);
 		writetoDisk(postingList, dic);
 		displayDic(dic);
+		*/
 	}
 	else {
 		/* could not open directory */
-		perror("");
+		perror("a");
 		return EXIT_FAILURE;
 	}
+	/*
 	cout << "Please enter your query:" << endl;
 	string in;
 
@@ -242,8 +318,7 @@ int main() {
 		}
 		cout << "Please enter your query:" << endl;
 	}
-
-	std::system("pause");
+	*/
 }
 
 /*FILE * pList;
@@ -266,4 +341,14 @@ allPosting.push_back(intTok);
 else {
 allPosting.push_back(stoi(*beg));
 }
+}
+
+void buildDic(list<string> voc, vector<vocabulary> &dic) {
+	vector<vocabulary>::iterator findit;//map of {term} to {pointer in file(location), length of the block}
+	for (list<string>::iterator it = voc.begin(); it != voc.end(); ++it) {
+		findit = dic.find(*it);
+		if (findit == dic.end()) {
+			dic.push_back({*it, 0, 0 });
+		}
+	}
 }*/
