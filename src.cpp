@@ -68,8 +68,8 @@ private:
 public:
 	void update(vector<string> voc, unsigned int docID){
 		for (vector<string>::iterator it = voc.begin(); it != voc.end(); ++it) {
-			postingList* findterm = find(*it);
-			if (findterm) {
+			vector<postingList>::iterator findterm = find(*it);
+			if (findterm != ind.end()) {
 				(findterm->postings).push_back(docID);
 				// cout << findterm->term << endl;
 				// for(vector<unsigned int>::iterator it2 = (findterm->postings).begin(); it2 != (findterm->postings).end(); ++it2){
@@ -86,16 +86,14 @@ public:
 		}
 	}
 
-	postingList *find(string term){
-		for(vector<postingList>::iterator it = ind.begin(); it != ind.end(); ++ it){
+	vector<postingList>::iterator find(string term){
+		vector<postingList>::iterator it;
+		for(it = ind.begin(); it != ind.end(); ++ it){
 			if(it->term == term){
-				postingList *pos = new postingList;
-				pos->term = term;
-				pos->postings = &it->postings;
-				return pos;
+				return it;
 			}
 		}
-		return nullptr;
+		return it;
 	}
 
 	void encode(){}
