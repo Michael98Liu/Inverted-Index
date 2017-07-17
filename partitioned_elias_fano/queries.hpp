@@ -362,6 +362,7 @@ namespace quasi_succinct {
             uint64_t candidate = enums[0].docs_enum.docid();
             size_t i = 1;
             while (candidate < index.num_docs()) {
+				logger() << "DocID: " << candidate << std::endl;
                 for (; i < enums.size(); ++i) {
                     enums[i].docs_enum.next_geq(candidate);
                     if (enums[i].docs_enum.docid() != candidate) {
