@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include<dirent.h>
+#include <ctime>
+#include <dirent.h>
 using namespace std;
 
 void break_down(){
@@ -16,17 +17,17 @@ void break_down(){
         if( pDIR=opendir(indir.c_str()) ){
             while(entry = readdir(pDIR)){
                 if( entry->d_name != "." && entry->d_name !="..") {
-                    cout << entry->d_name << "\n";
+                    cout << "Processing " << entry->d_name << " ...\n";
                     fin.open((indir + entry->d_name).c_str());
                     while(getline(fin, line)){
                         ofstream fout;
                         fout.open((outdir+to_string(count)).c_str());
 
-                        cout << line << endl;
+                        //cout << line << endl;
                         fout << line << endl;
                         if(fout.is_open()){
                             while(line != "</DOC>" && getline(fin, line)){
-                                cout << line << endl;
+                                //cout << line << endl;
                                 fout << line << endl;
                             }
                             fout.close();
@@ -44,7 +45,10 @@ void break_down(){
 }
 
 int main(){
+    int start_s = clock();
     break_down();
+    int stop_s = clock();
+    cout << "time: " << (stop_s-start_s)/double(CLOCKS_PER_SEC) << endl;
 
     return 0;
 }
