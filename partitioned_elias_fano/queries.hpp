@@ -326,7 +326,7 @@ namespace quasi_succinct {
         ranked_and_query(wand_data<scorer_type> const& wdata, uint64_t k)
             : m_wdata(wdata)
             , m_topk(k)
-        {logger() << "Ranked_and_query operator built" << std::endl;}
+        {}
 
         template <typename Index>
         uint64_t operator()(Index const& index, term_id_vec terms)
@@ -362,7 +362,7 @@ namespace quasi_succinct {
             uint64_t candidate = enums[0].docs_enum.docid();
             size_t i = 1;
             while (candidate < index.num_docs()) {
-				logger() << "DocID: " << candidate << std::endl;
+				logger() << "DOCID:  " << candidate << std::endl;
                 for (; i < enums.size(); ++i) {
                     enums[i].docs_enum.next_geq(candidate);
                     if (enums[i].docs_enum.docid() != candidate) {

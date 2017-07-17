@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(INDEX_PARTITIONING)
+set(BOOST_ROOT /home/michael916/boost_1_62_0)
 set(BOOST_INCLUDEDIR /home/michael916/boost_1_62_0/include)
 set(BOOST_LIBRARYDIR /home/michael916/boost_1_62_0/lib)
-
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
