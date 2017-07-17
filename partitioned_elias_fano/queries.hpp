@@ -326,7 +326,7 @@ namespace quasi_succinct {
         ranked_and_query(wand_data<scorer_type> const& wdata, uint64_t k)
             : m_wdata(wdata)
             , m_topk(k)
-        {}
+        {logger() << "Ranked_and_query operator built" << std::endl;}
 
         template <typename Index>
         uint64_t operator()(Index const& index, term_id_vec terms)
