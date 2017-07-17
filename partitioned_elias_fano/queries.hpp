@@ -59,6 +59,7 @@ namespace quasi_succinct {
             uint64_t candidate = enums[0].docid();
             size_t i = 1;
             while (candidate < index.num_docs()) {
+	    	logger() << "AND query DOCIDs: " << candidate << std::endl;
                 for (; i < enums.size(); ++i) {
                     enums[i].next_geq(candidate);
                     if (enums[i].docid() != candidate) {
@@ -109,6 +110,7 @@ namespace quasi_succinct {
                                                 })->docid();
 
             while (cur_doc < index.num_docs()) {
+	    	logger() << "Or query DOCIDs: " << cur_doc << std::endl;
                 results += 1;
                 uint64_t next_doc = index.num_docs();
                 for (size_t i = 0; i < enums.size(); ++i) {
@@ -362,7 +364,6 @@ namespace quasi_succinct {
             uint64_t candidate = enums[0].docs_enum.docid();
             size_t i = 1;
             while (candidate < index.num_docs()) {
-				logger() << "DOCID:  " << candidate << std::endl;
                 for (; i < enums.size(); ++i) {
                     enums[i].docs_enum.next_geq(candidate);
                     if (enums[i].docs_enum.docid() != candidate) {
