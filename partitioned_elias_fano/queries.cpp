@@ -74,11 +74,11 @@ void perftest(const char* index_filename,
 
     logger() << "Performing " << type << " queries" << std::endl;
     op_perftest(index, and_query<false>(), queries, type, "and", 3);
-    op_perftest(index, and_query<true>(), queries, type, "and_freq", 3);
+    /*op_perftest(index, and_query<true>(), queries, type, "and_freq", 3);
     op_perftest(index, or_query<false>(), queries, type, "or", 1);
-    op_perftest(index, or_query<true>(), queries, type, "or_freq", 1);
+    op_perftest(index, or_query<true>(), queries, type, "or_freq", 1);*/
 
-    if (wand_data_filename) {
+    /*if (wand_data_filename) {
         wand_data<> wdata;
         boost::iostreams::mapped_file_source md(wand_data_filename);
         succinct::mapper::map(wdata, md, succinct::mapper::map_flags::warmup);
@@ -86,7 +86,7 @@ void perftest(const char* index_filename,
         op_perftest(index, ranked_or_query(wdata, 10), queries, type, "ranked_or", 1);
         op_perftest(index, wand_query(wdata, 10), queries, type, "wand", 1);
         op_perftest(index, maxscore_query(wdata, 10), queries, type, "maxscore", 1);
-    }
+    }*/
 
 }
 
