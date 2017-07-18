@@ -12,7 +12,7 @@ private:
 	struct vocabulary{
 		string term;
 		int termID;
-		long location; //start location in the posting list
+		long location; //starto location in the posting list
 		int length; //length of the block in the posting list
 	};
 
